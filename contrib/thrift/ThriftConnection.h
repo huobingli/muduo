@@ -1,10 +1,10 @@
-#ifndef MUDUO_EXAMPLES_THRIFT_THRIFTCONNECTION_H
-#define MUDUO_EXAMPLES_THRIFT_THRIFTCONNECTION_H
+#ifndef MUDUO_CONTRIB_THRIFT_THRIFTCONNECTION_H
+#define MUDUO_CONTRIB_THRIFT_THRIFTCONNECTION_H
 
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/noncopyable.hpp>
 
-#include <muduo/net/TcpConnection.h>
+#include "muduo/net/TcpConnection.h"
 
 #include <thrift/protocol/TProtocol.h>
 #include <thrift/transport/TBufferTransports.h>
@@ -59,8 +59,8 @@ class ThriftConnection : boost::noncopyable,
 
   enum State state_;
   uint32_t frameSize_;
-}; // ThriftConnection
+};
 
 typedef boost::shared_ptr<ThriftConnection> ThriftConnectionPtr;
 
-#endif // MUDUO_EXAMPLES_THRIFT_THRIFTCONNECTION_H
+#endif  // MUDUO_CONTRIB_THRIFT_THRIFTCONNECTION_H

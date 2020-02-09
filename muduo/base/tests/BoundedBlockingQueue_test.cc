@@ -1,28 +1,32 @@
-#include <muduo/base/BoundedBlockingQueue.h>
-#include <muduo/base/CountDownLatch.h>
-#include <muduo/base/Thread.h>
+#include "muduo/base/BoundedBlockingQueue.h"
+#include "muduo/base/CountDownLatch.h"
+#include "muduo/base/Thread.h"
 
-#include <boost/bind.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
 #include <string>
+#include <vector>
+
 #include <stdio.h>
+#include <unistd.h>
 
 class Test
 {
  public:
   Test(int numThreads)
     : queue_(20),
-      latch_(numThreads),
-      threads_(numThreads)
+      latch_(numThreads)
   {
+    threads_.reserve(numThreads);
     for (int i = 0; i < numThreads; ++i)
     {
       char name[32];
       snprintf(name, sizeof name, "work thread %d", i);
-      threads_.push_back(new muduo::Thread(
-            boost::bind(&Test::threadFunc, this), muduo::string(name)));
+      threads_.emplace_back(new muduo::Thread(
+            std::bind(&Test::threadFunc, this), muduo::string(name)));
     }
-    for_each(threads_.begin(), threads_.end(), boost::bind(&muduo::Thread::start, _1));
+    for (auto& thr : threads_)
+    {
+      thr->start();
+    }
   }
 
   void run(int times)
@@ -46,7 +50,10 @@ class Test
       queue_.put("stop");
     }
 
-    for_each(threads_.begin(), threads_.end(), boost::bind(&muduo::Thread::join, _1));
+    for (auto& thr : threads_)
+    {
+      thr->join();
+    }
   }
 
  private:
@@ -73,12 +80,28 @@ class Test
 
   muduo::BoundedBlockingQueue<std::string> queue_;
   muduo::CountDownLatch latch_;
-  boost::ptr_vector<muduo::Thread> threads_;
+  std::vector<std::unique_ptr<muduo::Thread>> threads_;
 };
+
+void testMove()
+{
+#if BOOST_VERSION >= 105500L
+  muduo::BoundedBlockingQueue<std::unique_ptr<int>> queue(10);
+  queue.put(std::unique_ptr<int>(new int(42)));
+  std::unique_ptr<int> x = queue.take();
+  printf("took %d\n", *x);
+  *x = 123;
+  queue.put(std::move(x));
+  std::unique_ptr<int> y;
+  y = queue.take();
+  printf("took %d\n", *y);
+#endif
+}
 
 int main()
 {
   printf("pid=%d, tid=%d\n", ::getpid(), muduo::CurrentThread::tid());
+  testMove();
   Test t(5);
   t.run(100);
   t.joinAll();

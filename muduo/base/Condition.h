@@ -6,15 +6,14 @@
 #ifndef MUDUO_BASE_CONDITION_H
 #define MUDUO_BASE_CONDITION_H
 
-#include <muduo/base/Mutex.h>
+#include "muduo/base/Mutex.h"
 
-#include <boost/noncopyable.hpp>
 #include <pthread.h>
 
 namespace muduo
 {
 
-class Condition : boost::noncopyable
+class Condition : noncopyable
 {
  public:
   explicit Condition(MutexLock& mutex)
@@ -52,5 +51,6 @@ class Condition : boost::noncopyable
   pthread_cond_t pcond_;
 };
 
-}
+}  // namespace muduo
+
 #endif  // MUDUO_BASE_CONDITION_H

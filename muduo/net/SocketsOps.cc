@@ -6,17 +6,17 @@
 
 // Author: Shuo Chen (chenshuo at chenshuo dot com)
 
-#include <muduo/net/SocketsOps.h>
+#include "muduo/net/SocketsOps.h"
 
-#include <muduo/base/Logging.h>
-#include <muduo/base/Types.h>
-#include <muduo/net/Endian.h>
+#include "muduo/base/Logging.h"
+#include "muduo/base/Types.h"
+#include "muduo/net/Endian.h"
 
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>  // snprintf
-#include <strings.h>  // bzero
 #include <sys/socket.h>
+#include <sys/uio.h>  // readv
 #include <unistd.h>
 
 using namespace muduo;
@@ -47,7 +47,7 @@ void setNonBlockAndCloseOnExec(int sockfd)
 }
 #endif
 
-}
+}  // namespace
 
 const struct sockaddr* sockets::sockaddr_cast(const struct sockaddr_in6* addr)
 {
@@ -260,7 +260,7 @@ int sockets::getSocketError(int sockfd)
 struct sockaddr_in6 sockets::getLocalAddr(int sockfd)
 {
   struct sockaddr_in6 localaddr;
-  bzero(&localaddr, sizeof localaddr);
+  memZero(&localaddr, sizeof localaddr);
   socklen_t addrlen = static_cast<socklen_t>(sizeof localaddr);
   if (::getsockname(sockfd, sockaddr_cast(&localaddr), &addrlen) < 0)
   {
@@ -272,7 +272,7 @@ struct sockaddr_in6 sockets::getLocalAddr(int sockfd)
 struct sockaddr_in6 sockets::getPeerAddr(int sockfd)
 {
   struct sockaddr_in6 peeraddr;
-  bzero(&peeraddr, sizeof peeraddr);
+  memZero(&peeraddr, sizeof peeraddr);
   socklen_t addrlen = static_cast<socklen_t>(sizeof peeraddr);
   if (::getpeername(sockfd, sockaddr_cast(&peeraddr), &addrlen) < 0)
   {
@@ -281,9 +281,6 @@ struct sockaddr_in6 sockets::getPeerAddr(int sockfd)
   return peeraddr;
 }
 
-#if !(__GNUC_PREREQ (4,6))
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-#endif
 bool sockets::isSelfConnect(int sockfd)
 {
   struct sockaddr_in6 localaddr = getLocalAddr(sockfd);

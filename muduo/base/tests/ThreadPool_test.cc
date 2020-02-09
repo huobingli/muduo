@@ -1,10 +1,10 @@
-#include <muduo/base/ThreadPool.h>
-#include <muduo/base/CountDownLatch.h>
-#include <muduo/base/CurrentThread.h>
-#include <muduo/base/Logging.h>
+#include "muduo/base/ThreadPool.h"
+#include "muduo/base/CountDownLatch.h"
+#include "muduo/base/CurrentThread.h"
+#include "muduo/base/Logging.h"
 
-#include <boost/bind.hpp>
 #include <stdio.h>
+#include <unistd.h>  // usleep
 
 void print()
 {
@@ -31,15 +31,28 @@ void test(int maxSize)
   {
     char buf[32];
     snprintf(buf, sizeof buf, "task %d", i);
-    pool.run(boost::bind(printString, std::string(buf)));
+    pool.run(std::bind(printString, std::string(buf)));
   }
   LOG_WARN << "Done";
 
   muduo::CountDownLatch latch(1);
-  pool.run(boost::bind(&muduo::CountDownLatch::countDown, &latch));
+  pool.run(std::bind(&muduo::CountDownLatch::countDown, &latch));
   latch.wait();
   pool.stop();
 }
+
+/*
+ * Wish we could do this in the future.
+void testMove()
+{
+  muduo::ThreadPool pool;
+  pool.start(2);
+
+  std::unique_ptr<int> x(new int(42));
+  pool.run([y = std::move(x)]{ printf("%d: %d\n", muduo::CurrentThread::tid(), *y); });
+  pool.stop();
+}
+*/
 
 int main()
 {

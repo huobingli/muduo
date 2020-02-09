@@ -1,12 +1,10 @@
-#include <muduo/base/Logging.h>
-#include <muduo/net/Channel.h>
-#include <muduo/net/EventLoop.h>
-#include <muduo/net/Socket.h>
-#include <muduo/net/SocketsOps.h>
-#include <muduo/net/TcpClient.h>
-#include <muduo/net/TcpServer.h>
-
-#include <boost/bind.hpp>
+#include "muduo/base/Logging.h"
+#include "muduo/net/Channel.h"
+#include "muduo/net/EventLoop.h"
+#include "muduo/net/Socket.h"
+#include "muduo/net/SocketsOps.h"
+#include "muduo/net/TcpClient.h"
+#include "muduo/net/TcpServer.h"
 
 #include <stdio.h>
 
@@ -31,7 +29,7 @@ void serverReadCallback(int sockfd, muduo::Timestamp receiveTime)
 {
   int64_t message[2];
   struct sockaddr peerAddr;
-  bzero(&peerAddr, sizeof peerAddr);
+  memZero(&peerAddr, sizeof peerAddr);
   socklen_t addrLen = sizeof peerAddr;
   ssize_t nr = ::recvfrom(sockfd, message, sizeof message, 0, &peerAddr, &addrLen);
 
@@ -68,7 +66,7 @@ void runServer(uint16_t port)
   sock.bindAddress(InetAddress(port));
   EventLoop loop;
   Channel channel(&loop, sock.fd());
-  channel.setReadCallback(boost::bind(&serverReadCallback, sock.fd(), _1));
+  channel.setReadCallback(std::bind(&serverReadCallback, sock.fd(), _1));
   channel.enableReading();
   loop.loop();
 }
@@ -125,9 +123,9 @@ void runClient(const char* ip, uint16_t port)
   }
   EventLoop loop;
   Channel channel(&loop, sock.fd());
-  channel.setReadCallback(boost::bind(&clientReadCallback, sock.fd(), _1));
+  channel.setReadCallback(std::bind(&clientReadCallback, sock.fd(), _1));
   channel.enableReading();
-  loop.runEvery(0.2, boost::bind(sendMyTime, sock.fd()));
+  loop.runEvery(0.2, std::bind(sendMyTime, sock.fd()));
   loop.loop();
 }
 

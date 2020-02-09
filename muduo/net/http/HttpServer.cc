@@ -7,14 +7,12 @@
 // Author: Shuo Chen (chenshuo at chenshuo dot com)
 //
 
-#include <muduo/net/http/HttpServer.h>
+#include "muduo/net/http/HttpServer.h"
 
-#include <muduo/base/Logging.h>
-#include <muduo/net/http/HttpContext.h>
-#include <muduo/net/http/HttpRequest.h>
-#include <muduo/net/http/HttpResponse.h>
-
-#include <boost/bind.hpp>
+#include "muduo/base/Logging.h"
+#include "muduo/net/http/HttpContext.h"
+#include "muduo/net/http/HttpRequest.h"
+#include "muduo/net/http/HttpResponse.h"
 
 using namespace muduo;
 using namespace muduo::net;
@@ -33,9 +31,9 @@ void defaultHttpCallback(const HttpRequest&, HttpResponse* resp)
   resp->setCloseConnection(true);
 }
 
-}
-}
-}
+}  // namespace detail
+}  // namespace net
+}  // namespace muduo
 
 HttpServer::HttpServer(EventLoop* loop,
                        const InetAddress& listenAddr,
@@ -45,13 +43,9 @@ HttpServer::HttpServer(EventLoop* loop,
     httpCallback_(detail::defaultHttpCallback)
 {
   server_.setConnectionCallback(
-      boost::bind(&HttpServer::onConnection, this, _1));
+      std::bind(&HttpServer::onConnection, this, _1));
   server_.setMessageCallback(
-      boost::bind(&HttpServer::onMessage, this, _1, _2, _3));
-}
-
-HttpServer::~HttpServer()
-{
+      std::bind(&HttpServer::onMessage, this, _1, _2, _3));
 }
 
 void HttpServer::start()

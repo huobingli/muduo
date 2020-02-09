@@ -6,17 +6,14 @@
 
 // Author: Shuo Chen (chenshuo at chenshuo dot com)
 
-#include <muduo/net/InetAddress.h>
+#include "muduo/net/InetAddress.h"
 
-#include <muduo/base/Logging.h>
-#include <muduo/net/Endian.h>
-#include <muduo/net/SocketsOps.h>
+#include "muduo/base/Logging.h"
+#include "muduo/net/Endian.h"
+#include "muduo/net/SocketsOps.h"
 
 #include <netdb.h>
-#include <strings.h>  // bzero
 #include <netinet/in.h>
-
-#include <boost/static_assert.hpp>
 
 // INADDR_ANY use (type)value casting.
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -48,22 +45,20 @@ static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
 using namespace muduo;
 using namespace muduo::net;
 
-BOOST_STATIC_ASSERT(sizeof(InetAddress) == sizeof(struct sockaddr_in6));
-BOOST_STATIC_ASSERT(offsetof(sockaddr_in, sin_family) == 0);
-BOOST_STATIC_ASSERT(offsetof(sockaddr_in6, sin6_family) == 0);
-BOOST_STATIC_ASSERT(offsetof(sockaddr_in, sin_port) == 2);
-BOOST_STATIC_ASSERT(offsetof(sockaddr_in6, sin6_port) == 2);
+static_assert(sizeof(InetAddress) == sizeof(struct sockaddr_in6),
+              "InetAddress is same size as sockaddr_in6");
+static_assert(offsetof(sockaddr_in, sin_family) == 0, "sin_family offset 0");
+static_assert(offsetof(sockaddr_in6, sin6_family) == 0, "sin6_family offset 0");
+static_assert(offsetof(sockaddr_in, sin_port) == 2, "sin_port offset 2");
+static_assert(offsetof(sockaddr_in6, sin6_port) == 2, "sin6_port offset 2");
 
-#if !(__GNUC_PREREQ (4,6))
-#pragma GCC diagnostic ignored "-Winvalid-offsetof"
-#endif
 InetAddress::InetAddress(uint16_t port, bool loopbackOnly, bool ipv6)
 {
-  BOOST_STATIC_ASSERT(offsetof(InetAddress, addr6_) == 0);
-  BOOST_STATIC_ASSERT(offsetof(InetAddress, addr_) == 0);
+  static_assert(offsetof(InetAddress, addr6_) == 0, "addr6_ offset 0");
+  static_assert(offsetof(InetAddress, addr_) == 0, "addr_ offset 0");
   if (ipv6)
   {
-    bzero(&addr6_, sizeof addr6_);
+    memZero(&addr6_, sizeof addr6_);
     addr6_.sin6_family = AF_INET6;
     in6_addr ip = loopbackOnly ? in6addr_loopback : in6addr_any;
     addr6_.sin6_addr = ip;
@@ -71,7 +66,7 @@ InetAddress::InetAddress(uint16_t port, bool loopbackOnly, bool ipv6)
   }
   else
   {
-    bzero(&addr_, sizeof addr_);
+    memZero(&addr_, sizeof addr_);
     addr_.sin_family = AF_INET;
     in_addr_t ip = loopbackOnly ? kInaddrLoopback : kInaddrAny;
     addr_.sin_addr.s_addr = sockets::hostToNetwork32(ip);
@@ -83,12 +78,12 @@ InetAddress::InetAddress(StringArg ip, uint16_t port, bool ipv6)
 {
   if (ipv6)
   {
-    bzero(&addr6_, sizeof addr6_);
+    memZero(&addr6_, sizeof addr6_);
     sockets::fromIpPort(ip.c_str(), port, &addr6_);
   }
   else
   {
-    bzero(&addr_, sizeof addr_);
+    memZero(&addr_, sizeof addr_);
     sockets::fromIpPort(ip.c_str(), port, &addr_);
   }
 }
@@ -126,7 +121,7 @@ bool InetAddress::resolve(StringArg hostname, InetAddress* out)
   struct hostent hent;
   struct hostent* he = NULL;
   int herrno = 0;
-  bzero(&hent, sizeof(hent));
+  memZero(&hent, sizeof(hent));
 
   int ret = gethostbyname_r(hostname.c_str(), &hent, t_resolveBuffer, sizeof t_resolveBuffer, &he, &herrno);
   if (ret == 0 && he != NULL)
@@ -142,5 +137,13 @@ bool InetAddress::resolve(StringArg hostname, InetAddress* out)
       LOG_SYSERR << "InetAddress::resolve";
     }
     return false;
+  }
+}
+
+void InetAddress::setScopeId(uint32_t scope_id)
+{
+  if (family() == AF_INET6)
+  {
+    addr6_.sin6_scope_id = scope_id;
   }
 }

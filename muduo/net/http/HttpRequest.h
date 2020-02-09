@@ -11,9 +11,9 @@
 #ifndef MUDUO_NET_HTTP_HTTPREQUEST_H
 #define MUDUO_NET_HTTP_HTTPREQUEST_H
 
-#include <muduo/base/copyable.h>
-#include <muduo/base/Timestamp.h>
-#include <muduo/base/Types.h>
+#include "muduo/base/copyable.h"
+#include "muduo/base/Timestamp.h"
+#include "muduo/base/Types.h"
 
 #include <map>
 #include <assert.h>
@@ -181,7 +181,7 @@ class HttpRequest : public muduo::copyable
   std::map<string, string> headers_;
 };
 
-}
-}
+}  // namespace net
+}  // namespace muduo
 
 #endif  // MUDUO_NET_HTTP_HTTPREQUEST_H

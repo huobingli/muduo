@@ -1,15 +1,13 @@
-#include "ThriftServer.h"
+#include "contrib/thrift/ThriftServer.h"
 
 #include <boost/bind.hpp>
 
-#include <muduo/net/EventLoop.h>
+#include "muduo/net/EventLoop.h"
 
 using namespace muduo;
 using namespace muduo::net;
 
-ThriftServer::~ThriftServer()
-{
-}
+ThriftServer::~ThriftServer() = default;
 
 void ThriftServer::serve()
 {
